@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FreshFocus | Dashboard</title>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    /* =========================================
+       1. General & Theme Variables
+       ========================================= */
+    :root {
+      --primary-green: #10B981; 
+      --light-green: #D1FAE5;
+      --dark-green: #047857;
+      --alert-bg: #FFFBEB; 
+      --alert-border: #FBBF24;
+      --alert-text: #B45309;
+      --ai-purple: #8B5CF6; 
+      --bg-color: #F9FAFB; 
+      --text-main: #1F2937;
+      --text-muted: #6B7280;
+      --border-color: #E5E7EB;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Nunito', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      overflow-x: hidden;
+    }
+
+    .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 150; opacity: 0; visibility: hidden; transition: opacity 0.3s; backdrop-filter: blur(3px); }
+    .overlay.active { opacity: 1; visibility: visible; }
+
+    /* =========================================
+       2. Top Header & Nav
+       ========================================= */
+    header { background-color: white; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); position: sticky; top: 0; z-index: 200; }
+    .logo { font-size: 24px; font-weight: 800; color: var(--primary-green); display: flex; align-items: center; gap: 10px; }
+
+    /* Search & Magic Wand */
+    .search-container { flex: 0 1 450px; position: relative; z-index: 201; }
+    .search-bar { width: 100%; background-color: #F3F4F6; border: 2px solid transparent; border-radius: 50px; padding: 10px 45px 10px 45px; font-size: 15px; font-family: 'Nunito', sans-serif; transition: all 0.3s ease; box-sizing: border-box; }
+    .search-bar:focus { outline: none; border-color: var(--primary-green); background-color: white; box-shadow: 0 0 0 4px var(--light-green); }
+    .search-icon { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+    
+    .magic-wand-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: linear-gradient(135deg, var(--ai-purple), #C084FC); color: white; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3); transition: transform 0.2s; }
+    .magic-wand-btn:hover { transform: translateY(-50%) scale(1.1); }
+
+    /* AI Chat Popup */
+    .ai-chat-box { position: absolute; top: 60px; left: 0; width: 100%; background: white; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); border: 2px solid #DDD6FE; opacity: 0; visibility: hidden; transform: translateY(-10px); transition: all 0.3s; padding: 20px; box-sizing: border-box; z-index: 201; }
+    .ai-chat-box.active { opacity: 1; visibility: visible; transform: translateY(0); }
+    .chat-header { display: flex; align-items: center; gap: 10px; color: var(--ai-purple); font-weight: 800; margin-bottom: 15px; }
+    .chat-input-area { background: #F5F3FF; border: 1px solid #EDE9FE; border-radius: 12px; padding: 15px; font-size: 15px; color: var(--text-main); margin-bottom: 15px; outline: none; resize: none; width: 100%; box-sizing: border-box; height: 80px; font-family: 'Nunito', sans-serif; }
+    .chat-btn { background: var(--ai-purple); color: white; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; cursor: pointer; float: right; transition: background 0.2s; }
+    .chat-btn:hover { background: #7C3AED; }
+    .ai-loading { display: none; color: var(--ai-purple); font-weight: bold; font-style: italic; margin-top: 15px; text-align: center; }
+
+    /* Navigation Icons */
+    .nav-icons { display: flex; gap: 20px; align-items: center; }
+    .icon-wrapper { position: relative; }
+    .icon-btn { background: none; border: none; font-size: 22px; color: var(--text-muted); cursor: pointer; transition: color 0.2s; }
+    .icon-btn:hover { color: var(--primary-green); }
+    .notification-badge { position: absolute; top: -5px; right: -5px; background-color: #EF4444; color: white; font-size: 10px; font-weight: bold; width: 16px; height: 16px; border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 2px solid white; }
+
+    /* Smart Home Status */
+    .smart-home-pulse { color: var(--primary-green); font-size: 20px; cursor: help; animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+    /* Goal-Mode Toggle */
+    .goal-toggle-container { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; margin-right: 15px; padding-right: 15px; border-right: 2px solid var(--border-color); }
+    .switch { position: relative; display: inline-block; width: 46px; height: 24px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--primary-green); transition: .4s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: #3B82F6; }
+    input:checked + .slider:before { transform: translateX(22px); }
+    .goal-label { display: flex; align-items: center; gap: 5px; width: 70px; }
+
+    /* Dropdowns & Panels */
+    .dropdown-panel { position: absolute; top: 50px; background: white; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid var(--border-color); opacity: 0; visibility: hidden; transform: translateY(-10px); transition: all 0.3s ease; z-index: 105; }
+    .dropdown-panel.active { opacity: 1; visibility: visible; transform: translateY(0); }
+    #accountDropdown { right: 0; width: 300px; }
+    #notifDropdown { right: -60px; width: 350px; }
+    #calendarDropdown { right: -120px; width: 320px; }
+
+    .dropdown-header { padding: 15px 20px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid var(--border-color); font-weight: 800; font-size: 18px; }
+    .notif-item { display: flex; gap: 15px; padding: 15px 20px; border-bottom: 1px solid var(--border-color); cursor: pointer; }
+    .notif-item:hover { background-color: #F9FAFB; }
+    .notif-item img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+    .notif-content h4 { margin: 0 0 5px 0; font-size: 15px; }
+    .notif-content p { margin: 0; font-size: 13px; color: var(--text-muted); }
+    .dropdown-menu { list-style: none; padding: 10px 0; margin: 0; }
+    .dropdown-menu li a { display: flex; justify-content: space-between; padding: 12px 20px; color: var(--text-main); text-decoration: none; font-weight: 600; transition: background 0.2s; }
+    .dropdown-menu li a:hover { background-color: var(--light-green); color: var(--dark-green); }
+
+    /* Calendar Grid */
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; padding: 15px; text-align: center; }
+    .day-name { font-weight: 800; color: var(--text-muted); font-size: 12px; margin-bottom: 5px; }
+    .day { padding: 8px 0; border-radius: 8px; cursor: pointer; transition: all 0.2s; font-size: 14px; font-weight: 600; }
+    .day:not(.empty):hover { background: var(--primary-green); color: white; transform: scale(1.1); }
+
+    .cart-panel { position: fixed; top: 0; right: -400px; width: 350px; height: 100vh; background: white; box-shadow: -5px 0 25px rgba(0,0,0,0.1); z-index: 200; transition: right 0.4s ease; display: flex; flex-direction: column; }
+    .cart-panel.active { right: 0; }
+    .cart-header { padding: 25px; background-color: var(--primary-green); color: white; display: flex; justify-content: space-between; align-items: center; }
+    .close-cart { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+    .cart-items { padding: 20px; flex: 1; overflow-y: auto; }
+    .purchase-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--border-color); }
+    .purchase-item h4 { margin: 0 0 5px 0; }
+    .purchase-item p { margin: 0; color: var(--text-muted); font-size: 14px; }
+
+    /* =========================================
+       3. Layout (Split Screen)
+       ========================================= */
+    .dashboard-layout { max-width: 1300px; margin: 40px auto; padding: 0 20px; display: flex; gap: 40px; align-items: flex-start; }
+    .main-column { flex: 1; display: flex; flex-direction: column; align-items: center; min-width: 0; }
+    .sidebar-column { width: 320px; flex-shrink: 0; }
+
+    /* Alert Tab */
+    .alert-tab { background-color: var(--alert-bg); border: 2px solid var(--alert-border); border-radius: 16px; padding: 15px 25px; display: flex; align-items: center; gap: 20px; width: 100%; box-shadow: 0 10px 15px -3px rgba(251, 191, 36, 0.2); margin-bottom: 15px; box-sizing: border-box;}
+    .alert-tab i { font-size: 32px; color: var(--alert-text); }
+    .alert-food-img { width: 60px; height: 60px; border-radius: 12px; object-fit: cover; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .alert-info { flex: 1; }
+    .alert-info h3 { margin: 0 0 5px 0; color: var(--alert-text); font-size: 18px; }
+    .alert-info p { margin: 0; color: #92400E; font-size: 14px; }
+    .alert-btn { background-color: var(--alert-text); color: white; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; cursor: pointer; transition: background 0.2s; white-space: nowrap;}
+    .alert-btn:hover { background: #92400E; }
+
+    /* Ghost Item Bar */
+    .ghost-bar { width: 100%; background: white; border-radius: 12px; border-left: 5px solid var(--primary-green); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 30px; transition: opacity 0.4s, transform 0.4s; box-sizing: border-box;}
+    .ghost-bar.hidden { opacity: 0; transform: scaleY(0); margin-bottom: 0; padding: 0; height: 0; overflow: hidden; border: none; }
+    .ghost-content { display: flex; align-items: center; gap: 15px; font-weight: 700; color: var(--text-main); }
+    .ghost-content img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
+    .ghost-actions { display: flex; gap: 10px; }
+    .ghost-btn { width: 35px; height: 35px; border-radius: 50%; border: none; font-size: 16px; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: transform 0.2s; flex-shrink: 0;}
+    .ghost-yes { background: var(--light-green); color: var(--dark-green); }
+    .ghost-no { background: #FEE2E2; color: #DC2626; }
+    .ghost-btn:hover { transform: scale(1.1); }
+
+    /* Life-Sync Widget */
+    .life-sync-widget { width: 100%; background: linear-gradient(135deg, #DBEAFE, #EFF6FF); border: 1px solid #BFDBFE; border-radius: 12px; padding: 15px 20px; display: flex; align-items: center; gap: 15px; margin-bottom: 20px; box-sizing: border-box;}
+    .life-sync-widget i { font-size: 24px; color: #2563EB; flex-shrink: 0;}
+    .life-sync-text h4 { margin: 0 0 4px 0; font-size: 16px; color: #1E3A8A; }
+    .life-sync-text p { margin: 0; font-size: 14px; color: #3B82F6; }
+
+    /* Carousel */
+    .section-title { align-self: flex-start; margin-bottom: 15px; font-size: 20px; color: var(--text-main); width: 100%; }
+    .carousel-container { position: relative; width: 100%; display: flex; align-items: center; margin-bottom: 50px; }
+    .carousel-arrow { background: white; border: 1px solid var(--border-color); width: 45px; height: 45px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 18px; color: var(--text-main); cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: absolute; z-index: 10; transition: all 0.2s; }
+    .carousel-arrow:hover { background: var(--primary-green); color: white; border-color: var(--primary-green); }
+    .arrow-left { left: -20px; } .arrow-right { right: -20px; }
+    .recipe-track { display: flex; gap: 20px; overflow-x: hidden; scroll-behavior: smooth; padding: 10px; width: 100%; }
+    .recipe-bubble { flex: 0 0 200px; height: 200px; border-radius: 24px; background-color: #ddd; position: relative; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.3s ease; }
+    .recipe-bubble:hover { transform: translateY(-8px); box-shadow: 0 12px 20px rgba(0,0,0,0.15); }
+    .recipe-bubble img { width: 100%; height: 100%; object-fit: cover; }
+    .recipe-bubble .overlay-text { position: absolute; bottom: 0; left: 0; width: 100%; padding: 40px 15px 15px 15px; box-sizing: border-box; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); color: white; }
+    .recipe-bubble .overlay-text h4 { margin: 0 0 5px 0; font-size: 15px; }
+    .recipe-bubble .overlay-text p { margin: 0; font-size: 12px; opacity: 0.8; }
+    .recipe-tag { position: absolute; top: 15px; left: 15px; background: #EF4444; color: white; padding: 4px 10px; border-radius: 50px; font-size: 11px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+
+    /* Impact Widgets */
+    .impact-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; width: 100%; margin-bottom: 40px; }
+    .impact-card { background-color: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); border: 1px solid var(--border-color); display: flex; flex-direction: column; position: relative;}
+    .impact-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+    .impact-icon { width: 45px; height: 45px; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 20px; }
+    .icon-green { background-color: var(--light-green); color: var(--dark-green); }
+    .icon-blue { background-color: #DBEAFE; color: #1D4ED8; }
+    .impact-title h3 { margin: 0; font-size: 16px; }
+    .impact-title p { margin: 0; color: var(--text-muted); font-size: 12px; }
+    .progress-bar-bg { width: 100%; height: 10px; background-color: #F3F4F6; border-radius: 10px; overflow: hidden; margin: 15px 0; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary-green), #34D399); width: 75%; border-radius: 10px; }
+    .stat-huge { font-size: 36px; font-weight: 800; color: var(--text-main); margin: 5px 0 0 0; }
+    .leaderboard-banner { background: #FFF7ED; border: 1px solid #FFEDD5; padding: 10px; border-radius: 10px; margin-top: 15px; display: flex; align-items: center; gap: 10px; }
+    .leaderboard-banner i { color: #F59E0B; font-size: 20px; }
+    .leaderboard-banner p { margin: 0; font-size: 12px; color: #9A3412; font-weight: 700; }
+
+    /* Smartway Deals Map */
+    .smartway-container { width: 100%; margin-bottom: 50px; }
+    .smartway-grid { display: flex; gap: 20px; width: 100%; }
+    .smartway-card { flex: 1; background: white; border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); transition: transform 0.2s; cursor: pointer; }
+    .smartway-card:hover { transform: translateY(-5px); border-color: var(--primary-green); }
+    .store-logo { width: 50px; height: 50px; border-radius: 12px; object-fit: cover; }
+    .deal-info h4 { margin: 0 0 5px 0; font-size: 15px; }
+    .deal-info p { margin: 0; font-size: 13px; color: var(--text-muted); }
+    .discount-pill { display: inline-block; background: #FEF2F2; color: #EF4444; padding: 3px 8px; border-radius: 5px; font-weight: bold; font-size: 11px; margin-top: 5px; }
+
+    /* =========================================
+       4. Nutritional Gaps Sidebar 
+       ========================================= */
+    .sidebar-widget { background: white; border-radius: 20px; padding: 25px; border: 1px solid var(--border-color); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
+    .sidebar-widget h3 { margin: 0 0 20px 0; font-size: 18px; border-bottom: 2px solid #F3F4F6; padding-bottom: 10px; }
+    
+    .gap-item { margin-bottom: 20px; position: relative; }
+    .gap-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; font-weight: 700; }
+    .gap-bar-bg { width: 100%; height: 8px; background: #F3F4F6; border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
+    .gap-bar-fill { height: 100%; border-radius: 10px; }
+    .gap-red { width: 20%; background-color: #EF4444; }
+    .gap-orange { width: 45%; background-color: #F59E0B; }
+    
+    .shop-btn { background: var(--light-green); color: var(--dark-green); border: none; padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; transition: all 0.2s; width: 100%; }
+    .shop-btn:hover { background: var(--primary-green); color: white; }
+
+    .shop-popup { position: absolute; right: 105%; top: 0; width: 220px; background: white; border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); padding: 15px; opacity: 0; visibility: hidden; transition: all 0.2s; z-index: 50; }
+    .shop-popup.active { opacity: 1; visibility: visible; }
+    .shop-popup h4 { margin: 0 0 10px 0; font-size: 14px; color: var(--primary-green); }
+    .product-deal { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; font-size: 12px; }
+    .product-deal img { width: 30px; height: 30px; border-radius: 6px; object-fit: cover; }
+    .deal-tag { background: #FEF3C7; color: #B45309; padding: 2px 5px; border-radius: 4px; font-weight: bold; font-size: 10px; }
+
+    /* =========================================
+       5. Multi-Purpose FAB & Scanner
+       ========================================= */
+    .fab-wrapper { position: fixed; bottom: 40px; right: 40px; display: flex; flex-direction: column-reverse; align-items: center; gap: 15px; z-index: 1000; }
+    .fab-main { width: 65px; height: 65px; border-radius: 20px; background-color: var(--primary-green); color: white; font-size: 26px; border: none; cursor: pointer; box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4); transition: transform 0.3s, background-color 0.3s; display: flex; justify-content: center; align-items: center; z-index: 2; }
+    .fab-wrapper:hover .fab-main { transform: scale(1.05); background-color: var(--dark-green); }
+
+    .fab-action { width: 50px; height: 50px; border-radius: 50%; background: white; color: var(--text-main); border: 1px solid var(--border-color); box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transform: translateY(20px); transition: all 0.3s; font-size: 18px; position: relative; }
+    .fab-wrapper:hover .fab-action { opacity: 1; visibility: visible; transform: translateY(0); }
+    .fab-action:hover { background: var(--light-green); color: var(--primary-green); }
+    .fab-action::before { content: attr(data-tooltip); position: absolute; right: 60px; background: rgba(0,0,0,0.8); color: white; padding: 5px 10px; border-radius: 6px; font-size: 12px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+    .fab-action:hover::before { opacity: 1; }
+
+    .scanner-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: opacity 0.3s ease; }
+    .scanner-overlay.active { opacity: 1; visibility: visible; }
+    .close-scanner { position: absolute; top: 40px; right: 50px; background: none; border: none; color: white; font-size: 40px; cursor: pointer; transition: transform 0.2s; z-index: 10001; }
+    .close-scanner:hover { transform: scale(1.2); }
+    .scanner-frame { width: 350px; height: 350px; border: 2px solid white; box-shadow: 0 0 0 9999px rgba(30, 30, 30, 0.85); position: relative; border-radius: 16px; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; }
+    .scanner-hint { position: absolute; bottom: -40px; width: 100%; text-align: center; color: white; font-weight: 600; font-size: 14px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+    
+    /* =========================================
+       6. MOBILE ADAPTATION (RESPONSIVE DESIGN)
+       ========================================= */
+    @media (max-width: 950px) {
+      /* Adjust Header to wrap search bar */
+      header { flex-wrap: wrap; padding: 15px 20px; gap: 15px; }
+      .search-container { order: 3; flex: 1 1 100%; }
+      .goal-toggle-container { display: none; } /* Hide toggle to save space on small screens */
+      .smart-home-pulse { display: none; }
+      .ai-chat-box { width: 100%; padding: 15px; }
+
+      /* Stack the Dashboard Layout */
+      .dashboard-layout { flex-direction: column; gap: 30px; margin-top: 20px; padding: 0 15px;}
+      .sidebar-column { width: 100%; }
+
+      /* Adjust Ghost Bar */
+      .ghost-bar { flex-direction: column; gap: 15px; align-items: flex-start; }
+      .ghost-actions { width: 100%; justify-content: flex-end; }
+
+      /* Make Impact & Deals Grids 1 Column */
+      .impact-grid { grid-template-columns: 1fr; gap: 15px; }
+      .smartway-grid { flex-direction: column; }
+
+      /* Adjust Popups & Dropdowns so they don't break the screen */
+      .dropdown-panel { position: fixed; top: 140px; right: 5%; width: 90% !important; z-index: 1000; max-height: 70vh; overflow-y: auto;}
+      .shop-popup { right: 0; top: 40px; width: 100%; z-index: 55; }
+      
+      /* Make Cart full width */
+      .cart-panel { width: 100vw; right: -100vw; }
+      
+      /* Scale Scanner for Mobile */
+      .scanner-frame { width: 85vw; height: 85vw; }
+      .close-scanner { top: 20px; right: 20px; }
+      .fab-wrapper { bottom: 20px; right: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="overlay" id="mainOverlay"></div>
+
+  <header>
+    <div class="logo">
+      <i class="fas fa-leaf"></i> FreshFocus
+    </div>
+
+    <div class="search-container">
+      <i class="fas fa-search search-icon"></i>
+      <input type="text" class="search-bar" placeholder="Search for recipes, products, or ingredients...">
+      <button class="magic-wand-btn" id="magicWandBtn" title="Ask AI Sous-Chef"><i class="fas fa-magic"></i></button>
+      
+      <div class="ai-chat-box" id="aiChatBox">
+        <div class="chat-header"><i class="fas fa-robot"></i> AI Leftover Sous-Chef</div>
+        <textarea class="chat-input-area" id="aiInput" placeholder="e.g. I have half a leek, some pesto, and eggs—what can I make in 10 minutes?"></textarea>
+        <button class="chat-btn" id="aiSubmitBtn">Generate</button>
+        <div style="clear:both;"></div>
+        <div class="ai-loading" id="aiLoading">Analyzing your inventory...</div>
+      </div>
+    </div>
+
+    <div class="nav-icons">
+      <i class="fas fa-wifi smart-home-pulse" title="Inventory last updated via Smart Fridge 5 minutes ago"></i>
+
+      <div class="goal-toggle-container">
+        <div class="goal-label" id="goalLabelText"><i class="fas fa-leaf"></i> Cutting</div>
+        <label class="switch">
+          <input type="checkbox" id="goalToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="icon-wrapper">
+        <button class="icon-btn" id="calendarBtn"><i class="far fa-calendar-alt"></i></button>
+        <div class="dropdown-panel" id="calendarDropdown">
+          <div class="dropdown-header" style="justify-content: space-between;">
+            <span><i class="fas fa-calendar-day" style="color: var(--primary-green); margin-right: 8px;"></i> April 2026</span>
+            <div>
+              <i class="fas fa-chevron-left" style="cursor:pointer; margin-right:15px; font-size: 14px; color: var(--text-muted);"></i>
+              <i class="fas fa-chevron-right" style="cursor:pointer; font-size: 14px; color: var(--text-muted);"></i>
+            </div>
+          </div>
+          <div class="calendar-grid">
+            <div class="day-name">Su</div><div class="day-name">Mo</div><div class="day-name">Tu</div><div class="day-name">We</div><div class="day-name">Th</div><div class="day-name">Fr</div><div class="day-name">Sa</div>
+            <div class="day empty"></div><div class="day empty"></div><div class="day empty"></div>
+            <div class="day">1</div><div class="day">2</div><div class="day">3</div><div class="day">4</div>
+            <div class="day">5</div><div class="day">6</div><div class="day">7</div><div class="day">8</div>
+            <div class="day">9</div><div class="day">10</div><div class="day">11</div><div class="day">12</div>
+            <div class="day">13</div><div class="day">14</div><div class="day">15</div><div class="day">16</div>
+            <div class="day">17</div><div class="day">18</div><div class="day">19</div><div class="day">20</div>
+            <div class="day">21</div><div class="day">22</div><div class="day">23</div><div class="day">24</div>
+            <div class="day">25</div><div class="day">26</div><div class="day">27</div><div class="day">28</div>
+            <div class="day">29</div><div class="day">30</div><div class="day empty"></div><div class="day empty"></div>
+          </div>
+        </div>
+      </div>
+
+      <button class="icon-btn" id="cartBtn"><i class="fas fa-shopping-basket"></i></button>
+      
+      <div class="icon-wrapper">
+        <button class="icon-btn" id="notifBtn">
+          <i class="far fa-bell"></i>
+          <span class="notification-badge">2</span>
+        </button>
+        <div class="dropdown-panel" id="notifDropdown">
+          <div class="dropdown-header">Notifications</div>
+          <div class="notif-item">
+            <img src="https://images.unsplash.com/photo-1583394838336-acd977736f90?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" alt="Chef">
+            <div class="notif-content">
+              <h4>Chef Gordon posted a new recipe!</h4>
+              <p>Zero-Waste Vegetable Broth • 10m ago</p>
+            </div>
+          </div>
+          <ul class="dropdown-menu"><li><a href="#" style="justify-content: center; color: var(--primary-green);">View all activity</a></li></ul>
+        </div>
+      </div>
+      
+      <div class="icon-wrapper">
+        <button class="icon-btn" id="accountBtn"><i class="fas fa-user-circle"></i></button>
+        <div class="dropdown-panel" id="accountDropdown">
+          <div class="dropdown-header">
+            <i class="fas fa-user-circle" style="font-size: 30px; color: var(--primary-green);"></i>
+            <span style="font-size: 16px;">Bertrand Faille</span>
+          </div>
+          <ul class="dropdown-menu">
+            <li><a href="#">Account settings <i class="fas fa-chevron-right"></i></a></li>
+            <li><a href="#">Subscription management <i class="fas fa-chevron-right"></i></a></li>
+            <li><a href="#">Recommendation management <i class="fas fa-chevron-right"></i></a></li>
+            <li><a href="#">My Rewards <i class="fas fa-chevron-right"></i></a></li>
+            <li><a href="#">Smart Home <i class="fas fa-chevron-right"></i></a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="cart-panel" id="cartPanel">
+    <div class="cart-header">
+      <h3 style="margin:0;">Latest Purchases</h3>
+      <button class="close-cart" id="closeCart"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="cart-items">
+      <div class="purchase-item"><div><h4>Organic Leeks</h4><p>Purchased today</p></div><div>€2.50</div></div>
+      <div class="purchase-item"><div><h4>Free-Range Eggs</h4><p>Purchased yesterday</p></div><div>€3.20</div></div>
+    </div>
+  </div>
+
+  <div class="dashboard-layout">
+    
+    <div class="main-column">
+      
+      <div class="alert-tab">
+        <i class="fas fa-exclamation-triangle"></i>
+        <img src="https://images.unsplash.com/photo-1576045057995-568f588f82fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" alt="Spinach" class="alert-food-img">
+        <div class="alert-info">
+          <h3>Expiring Soon</h3>
+          <p>Baby Spinach • Expires in 2 days</p>
+        </div>
+        <button class="alert-btn">Use It Now</button>
+      </div>
+
+      <div class="ghost-bar" id="ghostBar">
+        <div class="ghost-content">
+          <img src="https://images.unsplash.com/photo-1550583724-b2692b85b150?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" alt="Milk">
+          <span>Quick check: Is your Milk finished?</span>
+        </div>
+        <div class="ghost-actions">
+          <button class="ghost-btn ghost-yes" onclick="hideGhostBar()"><i class="fas fa-check"></i></button>
+          <button class="ghost-btn ghost-no" onclick="hideGhostBar()"><i class="fas fa-times"></i></button>
+        </div>
+      </div>
+
+      <div class="life-sync-widget">
+        <i class="fab fa-google"></i>
+        <div class="life-sync-text">
+          <h4>Google Calendar: Meeting until 7:00 PM</h4>
+          <p>Time is tight tonight! Recommending our quickest macro-matched meals.</p>
+        </div>
+      </div>
+
+      <h2 class="section-title">Chef Recommendations</h2>
+      <div class="carousel-container">
+        <button class="carousel-arrow arrow-left" id="scrollLeft"><i class="fas fa-chevron-left"></i></button>
+        
+        <div class="recipe-track" id="recipeTrack">
+          <div class="recipe-bubble">
+            <span class="recipe-tag"><i class="fas fa-bolt"></i> 10-Min Recipe</span>
+            <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Food">
+            <div class="overlay-text"><h4>Spinach Frittata</h4><p>Uses your expiring spinach!</p></div>
+          </div>
+          <div class="recipe-bubble">
+            <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Food">
+            <div class="overlay-text"><h4>Green Goddess Bowl</h4><p>15 mins • Zero Waste</p></div>
+          </div>
+          <div class="recipe-bubble">
+            <img src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Food">
+            <div class="overlay-text"><h4>Avocado Toast Plus</h4><p>Chef Gordon • 5 mins</p></div>
+          </div>
+          <div class="recipe-bubble">
+            <img src="https://images.unsplash.com/photo-1473093295043-cdd812d0e601?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Food">
+            <div class="overlay-text"><h4>Pesto Pasta Bake</h4><p>Use up leftover cheese</p></div>
+          </div>
+          <div class="recipe-bubble">
+            <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Food">
+            <div class="overlay-text"><h4>Rustic Ratatouille</h4><p>Clear out the fridge!</p></div>
+          </div>
+        </div>
+
+        <button class="carousel-arrow arrow-right" id="scrollRight"><i class="fas fa-chevron-right"></i></button>
+      </div>
+
+      <h2 class="section-title">Your Impact Dashboard</h2>
+      <div class="impact-grid">
+        <div class="impact-card">
+          <div class="impact-header">
+            <div class="impact-icon icon-green"><i class="fas fa-seedling"></i></div>
+            <div class="impact-title"><h3>Eco-Score</h3><p>Gamification & Rewards</p></div>
+          </div>
+          <div><span style="font-weight: 800; font-size: 20px;">Level 5 Earther</span><span style="float: right; color: var(--primary-green); font-weight: bold;">750 / 1000 pts</span></div>
+          <div class="progress-bar-bg"><div class="progress-fill"></div></div>
+          
+          <div class="leaderboard-banner">
+            <i class="fas fa-medal"></i>
+            <p>You are in the Top 10% of Paris waste-reducers this month!</p>
+          </div>
+        </div>
+
+        <div class="impact-card">
+          <div class="impact-header">
+            <div class="impact-icon icon-blue"><i class="fas fa-cloud"></i></div>
+            <div class="impact-title"><h3>Carbon Footprint</h3><p>Emissions Saved</p></div>
+          </div>
+          <h2 class="stat-huge" id="carbonStat">-12.4 <span style="font-size: 20px;">kg CO₂</span></h2>
+          <p class="stat-subtitle">Saved this month through zero-waste cooking.</p>
+        </div>
+      </div>
+
+      <div class="smartway-container">
+        <h2 class="section-title">Nearby Zero-Waste Deals</h2>
+        <div class="smartway-grid">
+          
+          <div class="smartway-card">
+            <img src="https://images.unsplash.com/photo-1578916171728-46686eac8d58?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" class="store-logo" alt="Monoprix Store">
+            <div class="deal-info">
+              <h4>Monoprix (200m away)</h4>
+              <p>Organic Eggs</p>
+              <span class="discount-pill">-50% (Expires in 2 days)</span>
+            </div>
+          </div>
+
+          <div class="smartway-card">
+            <img src="https://images.unsplash.com/photo-1534723452862-4c874018d66d?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" class="store-logo" alt="Carrefour Store" style="object-fit: cover;">
+            <div class="deal-info">
+              <h4>Carrefour (450m away)</h4>
+              <p>High-Fiber Oats</p>
+              <span class="discount-pill">-30% Near Expiry</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <aside class="sidebar-column">
+      <div class="sidebar-widget">
+        <h3>Your Nutritional Gaps</h3>
+        
+        <div class="gap-item">
+          <div class="gap-header"><span>Fiber</span> <span style="color: #EF4444;">20%</span></div>
+          <div class="gap-bar-bg"><div class="gap-bar-fill gap-red"></div></div>
+          <button class="shop-btn" onclick="togglePopup('fiberPopup')">Shop High-Fiber <i class="fas fa-shopping-bag"></i></button>
+          
+          <div class="shop-popup" id="fiberPopup">
+            <h4><i class="fas fa-store"></i> Monoprix Smartway</h4>
+            <div class="product-deal">
+              <img src="https://images.unsplash.com/photo-1550081699-7fb0bfd9e961?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" alt="Oats">
+              <div><strong>Organic Oats</strong><br><span class="deal-tag">-30% Near Expiry</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="gap-item">
+          <div class="gap-header"><span>Iron</span> <span style="color: #F59E0B;">45%</span></div>
+          <div class="gap-bar-bg"><div class="gap-bar-fill gap-orange"></div></div>
+          <button class="shop-btn" onclick="togglePopup('ironPopup')">Shop High-Iron <i class="fas fa-shopping-bag"></i></button>
+          
+          <div class="shop-popup" id="ironPopup">
+            <h4><i class="fas fa-store"></i> Carrefour Smartway</h4>
+            <div class="product-deal">
+              <img src="https://images.unsplash.com/photo-1576045057995-568f588f82fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" alt="Spinach">
+              <div><strong>Fresh Spinach</strong><br><span class="deal-tag">-50% Near Expiry</span></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+  </div>
+
+  <div class="fab-wrapper">
+    <button class="fab-main"><i class="fas fa-plus"></i></button>
+    <button class="fab-action" data-tooltip="Trash Scan" onclick="openScanner('trash')"><i class="fas fa-trash-alt"></i></button>
+    <button class="fab-action" data-tooltip="Overview Scan" onclick="openScanner('add')"><i class="fas fa-shopping-bag"></i></button>
+  </div>
+
+  <div class="scanner-overlay" id="scannerOverlay">
+    <button class="close-scanner" id="closeScanner"><i class="fas fa-times"></i></button>
+    <div class="scanner-frame">
+      <i class="fas fa-barcode" style="font-size: 50px; color: rgba(255,255,255,0.4); margin-bottom: 20px;"></i>
+      <h3 style="color: white; margin: 0 0 10px 0;" id="scannerTitle">Overview Scan</h3>
+      <p style="color: rgba(255,255,255,0.7); margin: 0;">Position barcode within the frame</p>
+      <div class="scanner-hint">Ensure all labels are visible for GS1 Digital Link detection</div>
+    </div>
+  </div>
+
+  <script>
+    const mainOverlay = document.getElementById('mainOverlay');
+
+    // AI Chat (Magic Wand) Logic
+    const magicWandBtn = document.getElementById('magicWandBtn');
+    const aiChatBox = document.getElementById('aiChatBox');
+    const aiInput = document.getElementById('aiInput');
+    const aiSubmitBtn = document.getElementById('aiSubmitBtn');
+    const aiLoading = document.getElementById('aiLoading');
+
+    magicWandBtn.addEventListener('click', () => {
+      aiChatBox.classList.toggle('active');
+      mainOverlay.classList.toggle('active');
+      if(aiChatBox.classList.contains('active')) aiInput.focus();
+    });
+
+    aiSubmitBtn.addEventListener('click', () => {
+      if(aiInput.value.trim() === "") return;
+      aiLoading.style.display = 'block';
+      setTimeout(() => {
+        aiLoading.style.display = 'none';
+        alert("FreshFocus AI suggests: Pesto Leek Scramble! (Zero-Waste Match: 100%)");
+        aiChatBox.classList.remove('active');
+        mainOverlay.classList.remove('active');
+        aiInput.value = '';
+      }, 1500);
+    });
+
+    // Ghost Item Verification Bar Logic
+    function hideGhostBar() {
+      const ghostBar = document.getElementById('ghostBar');
+      ghostBar.classList.add('hidden');
+    }
+
+    // Dropdown Logic (including Calendar)
+    const accountBtn = document.getElementById('accountBtn');
+    const accountDropdown = document.getElementById('accountDropdown');
+    const notifBtn = document.getElementById('notifBtn');
+    const notifDropdown = document.getElementById('notifDropdown');
+    const calendarBtn = document.getElementById('calendarBtn');
+    const calendarDropdown = document.getElementById('calendarDropdown');
+
+    function closeAllDropdowns() {
+        accountDropdown.classList.remove('active');
+        notifDropdown.classList.remove('active');
+        if(calendarDropdown) calendarDropdown.classList.remove('active');
+    }
+
+    accountBtn.addEventListener('click', (e) => { e.stopPropagation(); const isActive = accountDropdown.classList.contains('active'); closeAllDropdowns(); if(!isActive) accountDropdown.classList.add('active'); });
+    notifBtn.addEventListener('click', (e) => { e.stopPropagation(); const isActive = notifDropdown.classList.contains('active'); closeAllDropdowns(); if(!isActive) notifDropdown.classList.add('active'); });
+    calendarBtn.addEventListener('click', (e) => { e.stopPropagation(); const isActive = calendarDropdown.classList.contains('active'); closeAllDropdowns(); if(!isActive) calendarDropdown.classList.add('active'); });
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.icon-wrapper')) {
+        closeAllDropdowns();
+      }
+      
+      // Close AI Chat if clicking outside
+      if(!aiChatBox.contains(e.target) && e.target !== magicWandBtn && !magicWandBtn.contains(e.target)) {
+        aiChatBox.classList.remove('active');
+        mainOverlay.classList.remove('active');
+      }
+      
+      // Close Shop Popups if clicking outside
+      if(!e.target.closest('.gap-item')) {
+         document.querySelectorAll('.shop-popup').forEach(p => p.classList.remove('active'));
+      }
+    });
+
+    // Calendar Days Logic
+    const days = document.querySelectorAll('.day:not(.empty)');
+    days.forEach(day => {
+      day.addEventListener('click', function() {
+        const date = this.innerText;
+        const task = prompt(`Add a new meal or task for April ${date}, 2026:`);
+        if(task) {
+          alert(`Successfully scheduled "${task}" for April ${date}!`);
+          calendarDropdown.classList.remove('active');
+        }
+      });
+    });
+
+    // Goal Toggle Logic
+    const goalToggle = document.getElementById('goalToggle');
+    const goalLabelText = document.getElementById('goalLabelText');
+    const carbonStat = document.getElementById('carbonStat');
+
+    if(goalToggle) {
+        goalToggle.addEventListener('change', function() {
+          if(this.checked) {
+            goalLabelText.innerHTML = '<i class="fas fa-dumbbell" style="color: #3B82F6;"></i> Bulking';
+            carbonStat.innerHTML = '-9.2 <span style="font-size: 20px;">kg CO₂</span>';
+          } else {
+            goalLabelText.innerHTML = '<i class="fas fa-leaf" style="color: var(--primary-green);"></i> Cutting';
+            carbonStat.innerHTML = '-12.4 <span style="font-size: 20px;">kg CO₂</span>';
+          }
+        });
+    }
+
+    // Shop Popups 
+    function togglePopup(popupId) {
+      document.querySelectorAll('.shop-popup').forEach(p => {
+        if(p.id !== popupId) p.classList.remove('active');
+      });
+      document.getElementById(popupId).classList.toggle('active');
+    }
+
+    // Scanner Logic 
+    const scannerOverlay = document.getElementById('scannerOverlay');
+    const closeScanner = document.getElementById('closeScanner');
+    const scannerTitle = document.getElementById('scannerTitle');
+
+    function openScanner(type) {
+      if(type === 'trash') {
+        scannerTitle.innerHTML = 'Trash Scan <i class="fas fa-trash-alt"></i>';
+      } else {
+        scannerTitle.innerHTML = 'Overview Scan <i class="fas fa-shopping-bag"></i>';
+      }
+      scannerOverlay.classList.add('active');
+    }
+
+    closeScanner.addEventListener('click', () => { scannerOverlay.classList.remove('active'); });
+
+    // Cart Logic
+    const cartBtn = document.getElementById('cartBtn');
+    const cartPanel = document.getElementById('cartPanel');
+    const closeCart = document.getElementById('closeCart');
+
+    function toggleCart() { cartPanel.classList.toggle('active'); mainOverlay.classList.toggle('active'); }
+    cartBtn.addEventListener('click', toggleCart);
+    closeCart.addEventListener('click', toggleCart);
+
+    // Recipe Carousel Logic
+    const scrollLeftBtn = document.getElementById('scrollLeft');
+    const scrollRightBtn = document.getElementById('scrollRight');
+    const recipeTrack = document.getElementById('recipeTrack');
+
+    scrollLeftBtn.addEventListener('click', () => { recipeTrack.scrollBy({ left: -220, behavior: 'smooth' }); });
+    scrollRightBtn.addEventListener('click', () => { recipeTrack.scrollBy({ left: 220, behavior: 'smooth' }); });
+  </script>
+</body>
+</html>
