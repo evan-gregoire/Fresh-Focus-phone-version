@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FreshFocus | Dashboard</title>
+  <title>FreshFocus | Desktop Dashboard</title>
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -32,6 +32,7 @@
       background-color: var(--bg-color);
       color: var(--text-main);
       overflow-x: hidden;
+      width: 100%;
     }
 
     .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 150; opacity: 0; visibility: hidden; transition: opacity 0.3s; backdrop-filter: blur(3px); }
@@ -117,8 +118,8 @@
     /* =========================================
        3. Layout (Split Screen)
        ========================================= */
-    .dashboard-layout { max-width: 1300px; margin: 40px auto; padding: 0 20px; display: flex; gap: 40px; align-items: flex-start; }
-    .main-column { flex: 1; display: flex; flex-direction: column; align-items: center; min-width: 0; }
+    .dashboard-layout { max-width: 1300px; margin: 40px auto; padding: 0 20px; display: flex; gap: 40px; align-items: flex-start; box-sizing: border-box; }
+    .main-column { flex: 1; display: flex; flex-direction: column; align-items: center; min-width: 0; width: 100%; box-sizing: border-box;}
     .sidebar-column { width: 320px; flex-shrink: 0; }
 
     /* Alert Tab */
@@ -163,7 +164,7 @@
     .recipe-bubble .overlay-text p { margin: 0; font-size: 12px; opacity: 0.8; }
     .recipe-tag { position: absolute; top: 15px; left: 15px; background: #EF4444; color: white; padding: 4px 10px; border-radius: 50px; font-size: 11px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
 
-    /* Impact Widgets */
+    /* Impact Widgets & Community Leaderboard */
     .impact-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; width: 100%; margin-bottom: 40px; }
     .impact-card { background-color: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); border: 1px solid var(--border-color); display: flex; flex-direction: column; position: relative;}
     .impact-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
@@ -236,33 +237,57 @@
        6. MOBILE ADAPTATION (RESPONSIVE DESIGN)
        ========================================= */
     @media (max-width: 950px) {
-      /* Adjust Header to wrap search bar */
-      header { flex-wrap: wrap; padding: 15px 20px; gap: 15px; }
-      .search-container { order: 3; flex: 1 1 100%; }
-      .goal-toggle-container { display: none; } /* Hide toggle to save space on small screens */
-      .smart-home-pulse { display: none; }
+      /* Fix Header to stack neatly */
+      header { flex-wrap: wrap; padding: 15px; gap: 10px; justify-content: space-between; }
+      .nav-icons { gap: 15px; }
+      .search-container { order: 3; flex: 1 1 100%; margin-top: 5px; }
+      .goal-toggle-container, .smart-home-pulse { display: none; } /* Hide complex toggles on small phones */
       .ai-chat-box { width: 100%; padding: 15px; }
 
-      /* Stack the Dashboard Layout */
-      .dashboard-layout { flex-direction: column; gap: 30px; margin-top: 20px; padding: 0 15px;}
-      .sidebar-column { width: 100%; }
+      /* Prevent horizontal scrolling bug */
+      body { width: 100%; overflow-x: hidden; }
+      .dashboard-layout { flex-direction: column; gap: 20px; margin-top: 20px; padding: 0 15px; width: 100%; box-sizing: border-box; }
+      .main-column, .sidebar-column { width: 100%; max-width: 100%; box-sizing: border-box; }
 
-      /* Adjust Ghost Bar */
-      .ghost-bar { flex-direction: column; gap: 15px; align-items: flex-start; }
-      .ghost-actions { width: 100%; justify-content: flex-end; }
+      /* Fix Alerts & Bars (Stack them neatly so text isn't crushed) */
+      .alert-tab { flex-direction: column; text-align: center; gap: 15px; padding: 20px; }
+      .alert-info { align-items: center; }
+      .alert-btn { width: 100%; }
 
-      /* Make Impact & Deals Grids 1 Column */
-      .impact-grid { grid-template-columns: 1fr; gap: 15px; }
+      .ghost-bar { flex-direction: column; gap: 15px; padding: 15px; text-align: center; }
+      .ghost-content { flex-direction: column; gap: 10px; }
+      .ghost-actions { justify-content: center; width: 100%; }
+
+      /* Fix Life-Sync Widget */
+      .life-sync-widget { flex-direction: column; text-align: center; }
+
+      /* FIX THE CAROUSEL OVERFLOW BUG */
+      .carousel-container { margin-bottom: 30px; }
+      .carousel-arrow { display: none !important; } /* Hide arrows to prevent the page from stretching horizontally */
+      .recipe-track { 
+        overflow-x: auto; /* Allow native touch swipe on phones */
+        padding: 15px 5px; 
+        -webkit-overflow-scrolling: touch; 
+        scroll-snap-type: x mandatory; 
+      }
+      .recipe-bubble { 
+        flex: 0 0 75%; /* Make cards fit screen better and peek the next card */
+        scroll-snap-align: center; 
+      }
+
+      /* Fix Grids */
+      .impact-grid { grid-template-columns: 1fr; gap: 15px; margin-bottom: 30px; }
       .smartway-grid { flex-direction: column; }
+      .smartway-card { width: 100%; box-sizing: border-box; }
 
-      /* Adjust Popups & Dropdowns so they don't break the screen */
-      .dropdown-panel { position: fixed; top: 140px; right: 5%; width: 90% !important; z-index: 1000; max-height: 70vh; overflow-y: auto;}
-      .shop-popup { right: 0; top: 40px; width: 100%; z-index: 55; }
+      /* Adjust Popups & Dropdowns so they stay on screen */
+      .dropdown-panel { position: fixed; top: 130px; right: 5%; left: 5%; width: 90% !important; z-index: 1000; max-height: 70vh; overflow-y: auto; }
+      .shop-popup { right: 0; top: 50px; width: 100%; z-index: 55; }
       
       /* Make Cart full width */
       .cart-panel { width: 100vw; right: -100vw; }
       
-      /* Scale Scanner for Mobile */
+      /* Scale Scanner & FAB for mobile */
       .scanner-frame { width: 85vw; height: 85vw; }
       .close-scanner { top: 20px; right: 20px; }
       .fab-wrapper { bottom: 20px; right: 20px; }
@@ -685,8 +710,10 @@
     const scrollRightBtn = document.getElementById('scrollRight');
     const recipeTrack = document.getElementById('recipeTrack');
 
-    scrollLeftBtn.addEventListener('click', () => { recipeTrack.scrollBy({ left: -220, behavior: 'smooth' }); });
-    scrollRightBtn.addEventListener('click', () => { recipeTrack.scrollBy({ left: 220, behavior: 'smooth' }); });
+    if(scrollLeftBtn && scrollRightBtn) {
+        scrollLeftBtn.addEventListener('click', () => { recipeTrack.scrollBy({ left: -220, behavior: 'smooth' }); });
+        scrollRightBtn.addEventListener('click', () => { recipeTrack.scrollBy({ left: 220, behavior: 'smooth' }); });
+    }
   </script>
 </body>
 </html>
